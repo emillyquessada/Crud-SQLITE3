@@ -28,3 +28,13 @@ def cadastrar_livro():
     conexao.commit()
 
 cadastrar_livro()
+
+#Etapa 3
+def listar_livros():
+    cursor.execute("SELECT * FROM livros")
+    for linha in cursor.fetchall():
+        print(f"ID: {linha[0]} | TITULO: {linha[1]} | AUTOR: {linha[2]} | ANO: {linha[3]} | DISPONIVEL: {linha[4]}")
+
+listar_livros()
+
+
