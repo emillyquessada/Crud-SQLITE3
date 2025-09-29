@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS livros (
 """)
 print("Tabela criada com sucesso!")
 
-#Etapa 2
+# #Etapa 2
 def cadastrar_livro(): 
     titulo = input("Digite o nome do livro que deseja cadastrar: ")
     autor = input("Digite o nome do autor: ")
@@ -27,14 +27,31 @@ def cadastrar_livro():
     )
     conexao.commit()
 
-cadastrar_livro()
+# cadastrar_livro()
 
-#Etapa 3
+# #Etapa 3
 def listar_livros():
-    cursor.execute("SELECT * FROM livros")
-    for linha in cursor.fetchall():
+     cursor.execute("SELECT * FROM livros")
+     for linha in cursor.fetchall():
         print(f"ID: {linha[0]} | TITULO: {linha[1]} | AUTOR: {linha[2]} | ANO: {linha[3]} | DISPONIVEL: {linha[4]}")
 
 listar_livros()
 
+#Etapa 4
+def atualizar_livros():
+    id_livro = input("Digite o ID do livro que deseja atualizar: ")
+    disponivel = input("O livro está disponível? (Sim/ Não): ")
+    if disponivel not in ["sim", "não", "nao"]:
+        print("Digite apenas 'Sim' ou 'Não'").lower()
+        return
+    
+    cursor.execute("""
+    UPDATE livros
+    SET  disponível = ?          
+    WHERE id = ?
+    """, (disponivel, id_livro) )
 
+    conexao.commit()
+    print("Dados atualizados com sucesso!")
+
+atualizar_livros()
