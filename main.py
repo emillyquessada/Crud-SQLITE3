@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS livros (
 """)
 print("Tabela criada com sucesso!")
 
-# #Etapa 2
+#Etapa 2
 def cadastrar_livro(): 
     titulo = input("Digite o nome do livro que deseja cadastrar: ")
     autor = input("Digite o nome do autor: ")
@@ -29,7 +29,7 @@ def cadastrar_livro():
 
 # cadastrar_livro()
 
-# #Etapa 3
+#Etapa 3
 def listar_livros():
      cursor.execute("SELECT * FROM livros")
      for linha in cursor.fetchall():
@@ -55,3 +55,18 @@ def atualizar_livros():
     print("Dados atualizados com sucesso!")
 
 atualizar_livros()
+
+#Etapa 5
+def remover_livro():
+    try:
+        id = int(input("Digite o ID do livro para removê-lo: "))
+        cursor.execute("DELETE FROM livros WHERE id = ?", (id,))
+        if cursor.rowcount > 0:
+            print("Livro removido com sucesso!")
+        else:
+            print("Nenhum livro cadastrado com o ID fornecido!")
+        conexao.commit()
+    except Exception as erro:
+        print(f"Erro ao tentar excluir o livro: {erro}")
+
+remover_livro()
