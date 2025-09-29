@@ -35,7 +35,7 @@ def listar_livros():
      for linha in cursor.fetchall():
         print(f"ID: {linha[0]} | TITULO: {linha[1]} | AUTOR: {linha[2]} | ANO: {linha[3]} | DISPONIVEL: {linha[4]}")
 
-listar_livros()
+
 
 #Etapa 4
 def atualizar_livros():
@@ -54,7 +54,7 @@ def atualizar_livros():
     conexao.commit()
     print("Dados atualizados com sucesso!")
 
-atualizar_livros()
+
 
 #Etapa 5
 def remover_livro():
@@ -69,4 +69,31 @@ def remover_livro():
     except Exception as erro:
         print(f"Erro ao tentar excluir o livro: {erro}")
 
-remover_livro()
+
+#Etapa 6
+def menu():
+    print("Seja bem vindo a nossa biblioteca virtual! Por favor escolha uma das opções abaixo")
+
+    print(f"\n === Plataforma ===")
+    print("1. Cadastrar livro")
+    print("2. Listagem de Livros")
+    print("3. Atualização de Disponibilidade")
+    print("4. Remoção de Livros")
+    print("5. Sair do sistema")
+
+while True:
+    menu()
+    opcao = input("Escolha uma opção: ")
+    if opcao == "1":
+        cadastrar_livro()
+    elif opcao == "2":
+        listar_livros()
+    elif opcao == "3":
+        atualizar_livros()
+    elif opcao == "4":
+        remover_livro()
+    elif opcao == "5":
+        print("Saindo do sistema . . .")
+        break
+    else:
+       print("Opção inválida!")
