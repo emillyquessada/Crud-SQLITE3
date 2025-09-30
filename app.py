@@ -1,38 +1,27 @@
 import streamlit as st
 import sqlite3
-import pandas as pd # Importação da biblioteca pandas
 
-# --- Configuração da Página e Título ---
-st.set_page_config(
-    page_title="Biblioteca Virtual",
-    page_icon="📚",
-    layout="centered"
+# python -m streamlit run app.py
+
+
+# Funções de antes
+conexao = sqlite3.connect("biblioteca.db", check_same_thread=False)
+cursor = conexao.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS livros (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    título TEXT NOT NULL,
+    autor TEXT NOT NULL,
+    ano INTEGER,
+    disponível TEXT NOT NULL
 )
+""")
+conexao.commit()
 
-# --- Conexão com banco de dados ---
-try:
-    conexao = sqlite3.connect("biblioteca.db", check_same_thread=False)
-    cursor = conexao.cursor()
-
-    # Cria a tabela se não existir
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS livros (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT,
-            autor TEXT,
-            ano INTEGER,
-            disponível TEXT
-        )
-    """)
-    conexao.commit()
-
-except sqlite3.Error as e:
-    st.error(f"Erro ao conectar ao banco de dados: {e}")
-
-# --- Funções do banco de dados ---
 def cadastrar_livro(titulo, autor, ano):
     cursor.execute("""
-        INSERT INTO livros (titulo, autor, ano, disponível)
+        INSERT INTO livros (título, autor, ano, disponível)
         VALUES (?, ?, ?, ?)
     """, (titulo, autor, ano, "sim"))
     conexao.commit()
@@ -41,96 +30,106 @@ def listar_livros():
     cursor.execute("SELECT * FROM livros")
     return cursor.fetchall()
 
-def atualizar_livro(id_livro, disponibilidade):
-    cursor.execute("UPDATE livros SET disponível = ? WHERE id = ?", (disponibilidade.lower(), id_livro))
+def atualizar_disponibilidade(id_livro, disponibilidade):
+    cursor.execute("""
+        UPDATE livros
+        SET disponível = ?
+        WHERE id = ?
+    """, (disponibilidade.lower(), id_livro))
     conexao.commit()
 
 def remover_livro(id_livro):
     cursor.execute("DELETE FROM livros WHERE id = ?", (id_livro,))
     conexao.commit()
+    return cursor.rowcount > 0
 
-# --- Título e Descrição Principal ---
-st.title("📚 Biblioteca Virtual")
-st.markdown("Gerencie sua coleção de livros de forma simples e organizada.")
-st.markdown("---")
 
-# --- Abas do menu ---
-abas = st.tabs(["➕ Cadastrar Livro", "📄 Listar Livros", "🔄 Atualizar Disponibilidade", "❌ Remover Livro"])
+# Começando o aplicativo
+st.set_page_config(page_title="Biblioteca Virtual", page_icon="📚")
 
-# --- Aba: Cadastrar Livro ---
+st.title("📕 Biblioteca Virtual")
+st.markdown("Gerencie seus livros de forma simples e rápida.")
+
+abas = st.tabs(["➕ Cadastrar Livro", "📚 Listar Livros", "🔄 Atualizar Disponibilidade", "❌ Remover Livro"])
+
+# Páginas para as funções
 with abas[0]:
-    st.header("➕ Cadastro de Novo Livro")
-    st.info("Preencha os campos abaixo para adicionar um novo livro à biblioteca.")
+    st.subheader("➕ Cadastrar Novo Livro")
     with st.form("form_cadastro"):
-        titulo = st.text_input("Título do Livro", placeholder="Ex: O Senhor dos Anéis")
-        autor = st.text_input("Autor", placeholder="Ex: J.R.R. Tolkien")
-        ano = st.number_input("Ano de Lançamento", min_value=0, step=1, placeholder="Ex: 1954")
-        cadastrar = st.form_submit_button("Cadastrar Livro")
+        titulo = st.text_input("Título do livro")
+        autor = st.text_input("Autor")
+        ano = st.number_input("Ano de lançamento", min_value=0, step=1)
+        submit = st.form_submit_button("Cadastrar")
 
-        if cadastrar:
-            if titulo and autor and ano:
+        if submit:
+            if titulo and autor:
                 cadastrar_livro(titulo, autor, ano)
                 st.success("✅ Livro cadastrado com sucesso!")
             else:
-                st.warning("⚠️ Preencha todos os campos para cadastrar o livro.")
+                st.warning("⚠️ Preencha todos os campos obrigatórios.")
 
-# --- Aba: Listar Livros ---
 with abas[1]:
-    st.header("📄 Livros Cadastrados")
+    st.subheader("📖 Lista de Livros Cadastrados")
     livros = listar_livros()
 
     if livros:
-        st.subheader(f"📖 Total de livros: {len(livros)}")
-        
-        # Uso de colunas para exibir métricas
-        col1, col2 = st.columns(2)
-        total_disponiveis = sum(1 for livro in livros if livro[4].lower() == 'sim')
-        total_indisponiveis = len(livros) - total_disponiveis
-        col1.metric("Disponíveis", total_disponiveis)
-        col2.metric("Indisponíveis", total_indisponiveis)
+        total = len(livros)
+        disponiveis = sum(1 for livro in livros if livro[4].lower() == "sim")
+        indisponiveis = total - disponiveis
 
+        st.write(f"📖 Total de livros: {total}")
+        st.write(f"✔ Disponíveis: {disponiveis} | ❌ Indisponíveis: {indisponiveis}")
         st.markdown("---")
 
-        # Criação do DataFrame e exibição da tabela
-        df = pd.DataFrame(livros, columns=["ID", "Título", "Autor", "Ano", "Disponível"])
-        st.dataframe(df, use_container_width=True, hide_index=True)
-    else:
-        st.info("📭 Nenhum livro cadastrado ainda. Use a aba 'Cadastrar Livro' para começar.")
+        # Montar os dados da tabela como lista de dicionários
+        dados_tabela = []
+        for livro in livros:
+            dados_tabela.append({
+                "ID": livro[0],
+                "Título": livro[1],
+                "Autor": livro[2],
+                "Ano": livro[3],
+                "Disponível": "Sim" if livro[4].lower() == "sim" else "Não"
+            })
 
-# --- Aba: Atualizar Disponibilidade ---
+        st.table(dados_tabela)
+
+    else:
+        st.info("📭 Nenhum livro cadastrado.")
+
 with abas[2]:
-    st.header("🔄 Atualizar Disponibilidade")
+    st.subheader("🔄 Atualizar Disponibilidade")
     livros = listar_livros()
     if livros:
         opcoes = {f"ID {livro[0]} - {livro[1]}": livro[0] for livro in livros}
-        escolha = st.selectbox("Selecione o livro que deseja atualizar:", list(opcoes.keys()))
-        
-        livro_selecionado = next((livro for livro in livros if livro[0] == opcoes[escolha]), None)
-        disponibilidade_atual = livro_selecionado[4].lower() if livro_selecionado else "sim"
+        selecionado = st.selectbox("Selecione o livro:", list(opcoes.keys()))
+        id_livro = opcoes[selecionado]
 
-        nova_disponibilidade = st.radio(
-            "Defina a nova disponibilidade:",
-            ["sim", "não"],
-            index=0 if disponibilidade_atual == "sim" else 1
-        )
+        nova_disp = st.radio("Novo status:", ["sim", "não"])
 
         if st.button("Atualizar"):
-            atualizar_livro(opcoes[escolha], nova_disponibilidade)
+            atualizar_disponibilidade(id_livro, nova_disp)
             st.success("🔄 Disponibilidade atualizada com sucesso!")
+            st.rerun()
     else:
-        st.warning("⚠️ Não há livros cadastrados para atualizar a disponibilidade.")
+        st.warning("Nenhum livro cadastrado para atualizar.")
 
-# --- Aba: Remover Livro ---
 with abas[3]:
-    st.header("❌ Remover Livro")
+    st.subheader("❌ Remover Livro")
     livros = listar_livros()
     if livros:
         opcoes = {f"ID {livro[0]} - {livro[1]}": livro[0] for livro in livros}
-        escolha = st.selectbox("Selecione o livro para remover:", list(opcoes.keys()))
+        selecionado = st.selectbox("Selecione o livro:", list(opcoes.keys()), key="select_atualizar")
+        id_livro = opcoes[selecionado]
 
         if st.button("Remover"):
-            remover_livro(opcoes[escolha])
-            st.success("🗑️ Livro removido com sucesso!")
-            st.rerun() # Adiciona um "rerun" para atualizar a lista após a remoção
+            sucesso = remover_livro(id_livro)
+            if sucesso:
+                st.success("🗑️ Livro removido com sucesso!")
+                st.rerun()
+            else:
+                st.error("Erro ao remover o livro.")
     else:
-        st.warning("⚠️ Não há livros cadastrados para remover.")
+        st.warning("Nenhum livro cadastrado para remover.")
+
+# python -m streamlit run app.py
