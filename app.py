@@ -48,7 +48,7 @@ def remover_livro(id_livro):
 st.set_page_config(page_title="Biblioteca Virtual", page_icon="📚")
 
 st.title("📕 Biblioteca Virtual")
-st.markdown("Gerencie seus livros de forma simples e rápida.")
+st.markdown("Seja bem vindo! Aqui você poderá cadastrar livros, atualiza-los e até mesmo removê-los!")
 
 abas = st.tabs(["➕ Cadastrar Livro", "📚 Listar Livros", "🔄 Atualizar Disponibilidade", "❌ Remover Livro"])
 
