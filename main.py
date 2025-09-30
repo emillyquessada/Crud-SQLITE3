@@ -40,7 +40,7 @@ def listar_livros():
 #Etapa 4
 def atualizar_livros():
     id_livro = input("Digite o ID do livro que deseja atualizar: ")
-    disponivel = input("O livro está disponível? (Sim/ Não): ")
+    disponivel = input("O livro está disponível? (Sim / Não): ").lower()
     if disponivel not in ["sim", "não", "nao"]:
         print("Digite apenas 'Sim' ou 'Não'").lower()
         return
